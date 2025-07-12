@@ -38,6 +38,7 @@ resource "hcloud_load_balancer" "rke2_lb" {
 
 // Create K8S API, Register HTTP and HTTPS services on the load balancer
 resource "hcloud_load_balancer_service" "rke2_lb_api" {
+  count            = var.extra_server_count > 0 ? 1 : 0
   load_balancer_id = hcloud_load_balancer.rke2_lb[0].id
   protocol         = "tcp"
   listen_port      = 6443
@@ -45,6 +46,7 @@ resource "hcloud_load_balancer_service" "rke2_lb_api" {
 }
 
 resource "hcloud_load_balancer_service" "rke2_lb_supervisor_api" {
+  count            = var.extra_server_count > 0 ? 1 : 0
   load_balancer_id = hcloud_load_balancer.rke2_lb[0].id
   protocol         = "tcp"
   listen_port      = 9345
@@ -52,6 +54,7 @@ resource "hcloud_load_balancer_service" "rke2_lb_supervisor_api" {
 }
 
 resource "hcloud_load_balancer_service" "rke2_lb_http" {
+  count            = var.extra_server_count > 0 ? 1 : 0
   load_balancer_id = hcloud_load_balancer.rke2_lb[0].id
   protocol         = "tcp"
   listen_port      = 80
@@ -59,6 +62,7 @@ resource "hcloud_load_balancer_service" "rke2_lb_http" {
 }
 
 resource "hcloud_load_balancer_service" "rke2_lb_https" {
+  count            = var.extra_server_count > 0 ? 1 : 0
   load_balancer_id = hcloud_load_balancer.rke2_lb[0].id
   protocol         = "tcp"
   listen_port      = 443
@@ -91,6 +95,7 @@ module "deploy_server" {
     rke2Role        = "server"
     hostname        = hcloud_server.rke2_server.name
     tlsSans         = var.extra_server_count > 0 ? [hcloud_load_balancer.rke2_lb[0].ipv4] : []
+    rke2Server = null
   }
 }
 
@@ -157,8 +162,8 @@ resource "null_resource" "fetch_rke2_token" {
       REMOTE_TOKEN_FILE="/tmp/rke2_token_$$"
       SERVER_IP="${hcloud_server.rke2_server.ipv4_address}"
 
-      # Retry for up to 5 minutes (300 seconds)
-      timeout=300
+      # Retry for up to 10 minutes (600 seconds)
+      timeout=600
       interval=5
       start_time=$(date +%s)
       while true; do

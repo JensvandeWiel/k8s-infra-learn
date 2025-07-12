@@ -64,7 +64,7 @@
       cni = "cilium";
       # If agent role is enabled, specify the server address
 
-      server = if args.rke2Role == "agent" then "https://${args.rke2Server}:9345" else null;
+      server = if args.rke2Server != null then "https://${args.rke2Server}:9345" else null;
       token = args.rke2Token or null;
       tls-san = args.tlsSans or [];
     };
