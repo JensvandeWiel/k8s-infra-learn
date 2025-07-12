@@ -16,7 +16,6 @@ resource "tls_private_key" "nix_key" {
   algorithm = "ED25519"
 }
 
-
 resource "hcloud_ssh_key" "nix_key" {
   name       = var.ssh_key_name
   public_key = var.pub_ssh_key != null ? var.pub_ssh_key : tls_private_key.nix_key.public_key_openssh
@@ -69,7 +68,16 @@ resource "hcloud_load_balancer_service" "rke2_lb_https" {
   destination_port = 443
 }
 
-# TODO: Add nodeport range?
+// Create placement group for the RKE2 cluster servers/agents
+resource "hcloud_placement_group" "rke2_placement_group" {
+  name = "${var.cluster_name}-placement-group"
+  type = "spread"
+
+  labels = {
+    role = "rke2-placement-group"
+  }
+}
+
 
 resource "hcloud_server" "rke2_server" {
   name        = "${var.cluster_name}-server-1"
@@ -77,6 +85,7 @@ resource "hcloud_server" "rke2_server" {
   location    = var.location
   image       = "ubuntu-24.04"
   ssh_keys = [hcloud_ssh_key.nix_key.id]
+  placement_group_id = hcloud_placement_group.rke2_placement_group.id
 }
 
 module "deploy_server" {
@@ -203,6 +212,7 @@ resource "hcloud_server" "rke2_extra_servers" {
   location    = var.location
   image       = "ubuntu-24.04"
   ssh_keys = [hcloud_ssh_key.nix_key.id]
+  placement_group_id = hcloud_placement_group.rke2_placement_group.id
 }
 
 module "deploy_extra_servers" {
@@ -283,10 +293,11 @@ resource "hcloud_load_balancer_target" "rke2_lb_extra_servers" {
 resource "hcloud_server" "rke2_agent" {
   count       = var.agent_count
   name        = "${var.cluster_name}-agent-${count.index + 1}"
-  server_type = var.server_type
+  server_type = var.agent_type
   location    = var.location
   image       = "ubuntu-24.04"
   ssh_keys = [hcloud_ssh_key.nix_key.id]
+  placement_group_id = hcloud_placement_group.rke2_placement_group.id
   labels = {
     role = "rke2-agent"
   }

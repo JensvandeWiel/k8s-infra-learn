@@ -16,14 +16,14 @@ variable "priv_ssh_key" {
     default     = null
 }
 
-variable "server_name" {
-    description = "Name of the server to be created"
-    type        = string
-    default     = "nixos-anywhere-server"
-}
-
 variable "server_type" {
     description = "Type of the server to be created"
+    type        = string
+    default     = "cpx11"
+}
+
+variable "agent_type" {
+    description = "Type of the agent server to be created"
     type        = string
     default     = "cpx11"
 }
