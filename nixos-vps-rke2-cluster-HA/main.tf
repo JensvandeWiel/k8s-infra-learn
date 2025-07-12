@@ -156,7 +156,7 @@ resource "null_resource" "copy_files" {
 }
 
 resource "null_resource" "fetch_rke2_token" {
-  depends_on = [hcloud_server.rke2_server]
+  depends_on = [hcloud_server.rke2_server, module.deploy_server]
 
   triggers = {
     always_run = timestamp()
